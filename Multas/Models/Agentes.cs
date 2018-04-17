@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.ComponentModel.DataAnnotations;
+using System.ComponentModel.DataAnnotations.Schema;
 using System.Linq;
 using System.Web;
 
@@ -14,6 +15,7 @@ namespace Multas.Models
         }
 
         [Key]
+        [DatabaseGenerated(DatabaseGeneratedOption.None)]
         public int ID { get; set; }
 
         [Required(ErrorMessage = "O {0} é de preenchimento obrigatório!")]
@@ -22,7 +24,7 @@ namespace Multas.Models
         public string Nome { get; set; }
 
         [Required(ErrorMessage = "A {0} é de preenchimento obrigatório!")]
-        [RegularExpression("[A-ZÁÉÍÓÚÀÈÌÒÙÂÊÎÔÛÕÃÇÄËÏÖÜ][a-záéíóúàèìòùâêîôûãõçäëïöü]+(( |-| do | da | dos | das | de |)[A-ZÁÉÍÓÚÀÈÌÒÙÂÊÎÔÛÕÃÇÄËÏÖÜ][a-záéíóúàèìòùâêîôûãõçäëïöü]+){1,3}", ErrorMessage = "A {0} não é válida")]
+        //[RegularExpression("[A-ZÁÉÍÓÚÀÈÌÒÙÂÊÎÔÛÕÃÇÄËÏÖÜ][a-záéíóúàèìòùâêîôûãõçäëïöü]+(( |-| do | da | dos | das | de |)[A-ZÁÉÍÓÚÀÈÌÒÙÂÊÎÔÛÕÃÇÄËÏÖÜ][a-záéíóúàèìòùâêîôûãõçäëïöü]+){1,3}", ErrorMessage = "A {0} não é válida")]
         public string Esquadra { get; set; }
 
         public string Fotografia { get; set; }

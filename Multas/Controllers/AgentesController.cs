@@ -2,6 +2,7 @@
 using System.Collections.Generic;
 using System.Data;
 using System.Data.Entity;
+using System.IO;
 using System.Linq;
 using System.Net;
 using System.Web;
@@ -18,7 +19,11 @@ namespace Multas.Controllers
         public ActionResult Index()
         {
             //db.Agentes.ToList() -> em sql : SELECT * FROM Agentes;
-            return View(db.Agentes.ToList());
+            //enviar pa view uma lista de todos os agentes
+            //obter a lista de todos os agentes
+            //em SQL slect * from agentes order by nome
+            var listaDeAgentes = db.Agentes.ToList().OrderBy(a=>a.Nome);
+            return View(listaDeAgentes);
         }
 
         // GET: Agentes/Details/5
@@ -28,13 +33,21 @@ namespace Multas.Controllers
             //protecao para o caso de nao ter sido fornecido um ID valido
             if (id == null)
             {
-                return new HttpStatusCodeResult(HttpStatusCode.BadRequest);
+                //instrução original
+                //devolve erro qd nao ha ID
+                //logo, não é possivel pesquisar por um agente
+                // return new HttpStatusCodeResult(HttpStatusCode.BadRequest);
+
+                //redirecionar para uma pagina que nos controlamos
+                return RedirectToAction("Index");
             }
             //procura na bd o agente cujo id foi fornecido
             Agentes agentes = db.Agentes.Find(id);
             if (agentes == null)
             {
-                return HttpNotFound();
+                //O AGENTE NAO FOI ENCONTRADO LOGO GERA-SE UMA MENSAGEM DE ERRO 
+                //return HttpNotFound();
+                return RedirectToAction("Index");
             }
             //entrega a view os dados do agente encontrado
             return View(agentes);
@@ -52,33 +65,93 @@ namespace Multas.Controllers
         [HttpPost]
         //anotador para proteçao por roubo de identidade
         [ValidateAntiForgeryToken]
-        public ActionResult Create([Bind(Include = "Nome,Esquadra,Fotografia")] Agentes agentes)
-        {
+        public ActionResult Create([Bind(Include = "Nome,Esquadra")] Agentes agente, HttpPostedFileBase uploadFotografia){
             //escrever os dados de um novo agente na BD
-            if (ModelState.IsValid){
-                //adiciona um novo agente a bd
-                db.Agentes.Add(agentes);
-                //faz commit as alteracoes
-                db.SaveChanges();
-                //se tudo correr bem volta ao index
-                return RedirectToAction("Index");
+
+            //especificar o id do novo agente
+            //testar se ha registos na tabela dos agentes
+            //if (db.Agentes.Count() != 0){}
+            //ou entao usar a instruçao Try Catch
+            int id = 0;
+            try { id = db.Agentes.Max(a => a.ID) + 1; }
+            catch (Exception) {
+                id = 1;
             }
 
-            return View(agentes);
+
+            //guardar o id do novo agente
+            agente.ID = id;
+            //especificar o nome do ficheiro
+            string nomeImagem = "Agente_"+id+".jpg";
+            //var. auxiliar
+            string path = "";
+            //validar se imagem foi fornecida
+            if(uploadFotografia != null){
+                //o ficheiro foi fornecido
+                //validar se o ficheiro que foi fornecido é imagem
+                //formatar o tamanho da imagem
+
+                //criar o caminho completo ate ao sitio onde o ficheiro sera guardado
+                path = Path.Combine(Server.MapPath("~/imagens/"), nomeImagem);
+
+                //guardar o nome do ficheiro na BD
+                agente.Fotografia = nomeImagem;
+            }
+            else{
+                //nao foi fornecido qq ficheiro
+                ModelState.AddModelError("", "Não foi fornecida uma imagem...");
+                //devolver o controlo a view
+                return View(agente);
+            }
+            //guardar o nome escolhido na BD
+            //escrever um file com a foto
+            //no disco rigido na pasta 'imagens'
+            if (ModelState.IsValid){
+                try
+                {
+                    db.Agentes.Add(agente);
+                    //faz commit as alteracoes
+                    db.SaveChanges();
+                    //escrever o ficheiro com a foto no disco rigido, na pasta
+                    uploadFotografia.SaveAs(path);
+                    //se tudo correr bem volta ao index
+                    return RedirectToAction("Index");
+                }
+                catch (Exception)
+                {
+
+                    ModelState.AddModelError("", "Houve um erro na criação do novo agente...");
+                }
+                //adiciona um novo agente a bd
+                
+            }
+
+            return View(agente);
         }
 
         // GET: Agentes/Edit/5
         public ActionResult Edit(int? id)
         {
+            //protecao para o caso de nao ter sido fornecido um ID valido
             if (id == null)
             {
-                return new HttpStatusCodeResult(HttpStatusCode.BadRequest);
+                //instrução original
+                //devolve erro qd nao ha ID
+                //logo, não é possivel pesquisar por um agente
+                // return new HttpStatusCodeResult(HttpStatusCode.BadRequest);
+
+                //redirecionar para uma pagina que nos controlamos
+                return RedirectToAction("Index");
             }
+            //procura na bd o agente cujo id foi fornecido
             Agentes agentes = db.Agentes.Find(id);
             if (agentes == null)
             {
-                return HttpNotFound();
+                //O AGENTE NAO FOI ENCONTRADO LOGO GERA-SE UMA MENSAGEM DE ERRO 
+                //return HttpNotFound();
+                return RedirectToAction("Index");
             }
+            //entrega a view os dados do agente encontrado
             return View(agentes);
         }
 
@@ -99,16 +172,23 @@ namespace Multas.Controllers
         }
 
         // GET: Agentes/Delete/5
+        /// <summary>
+        /// apresenta na view os dados de um agente com vista à sua eventual, eliminaçao
+        /// </summary>
+        /// <param name="id">identificador do agente a apagar</param>
+        /// <returns></returns>
         public ActionResult Delete(int? id)
         {
             if (id == null)
             {
-                return new HttpStatusCodeResult(HttpStatusCode.BadRequest);
+                return RedirectToAction("Index");
             }
             Agentes agentes = db.Agentes.Find(id);
             if (agentes == null)
             {
-                return HttpNotFound();
+                //o Agente nao existe
+                //Redirecionar para a pagina inicial    
+                return RedirectToAction("Index");
             }
             return View(agentes);
         }
