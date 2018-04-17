@@ -121,6 +121,20 @@ namespace Multas.Controllers
                 {
 
                     ModelState.AddModelError("", "Houve um erro na criação do novo agente...");
+                    ///se existir uma classe chamada Erro.cs
+                    ///iremos nela registar os dados do erro
+                    /// - criar o objeto desta classe
+                    /// - atribuir a esse objeto os dados do erro
+                    ///   -nome do controller 
+                    ///   -nome do metodo 
+                    ///   -data + hora do erro
+                    ///   -mensagem do erro
+                    ///   -dados que se tentavam inserir
+                    ///   -outros dados considerados relevantes
+                    /// -guardar obj na bd
+                    /// 
+                    /// -notificar o gestor do sistema por email 
+                    /// ou por outro meio da ocorrencia do erro e dos seus dados
                 }
                 //adiciona um novo agente a bd
                 
